@@ -1,0 +1,17 @@
+parameter,segment,value,unit,note
+fee_per_module,all,2500,INR,HYPOTHETICAL course fee per module enrolment (Edumaths360-style pricing); OULAD has no revenue data
+refund_window_days,all,14,days,HYPOTHETICAL: students who unregister on/before this day get a full refund
+gross_margin,all,0.70,ratio,HYPOTHETICAL contribution margin
+reenrol_rate_if_passed,all,0.45,ratio,HYPOTHETICAL probability a passing student buys the next module
+reenrol_rate_if_not_passed,all,0.10,ratio,HYPOTHETICAL probability a non-passing student buys again
+cac,0-10%,750,INR,HYPOTHETICAL flat acquisition cost; edit per band to test scenarios
+cac,10-20,750,INR,HYPOTHETICAL flat acquisition cost; edit per band to test scenarios
+cac,20-30%,750,INR,HYPOTHETICAL flat acquisition cost; edit per band to test scenarios
+cac,30-40%,750,INR,HYPOTHETICAL flat acquisition cost; edit per band to test scenarios
+cac,40-50%,750,INR,HYPOTHETICAL flat acquisition cost; edit per band to test scenarios
+cac,50-60%,750,INR,HYPOTHETICAL flat acquisition cost; edit per band to test scenarios
+cac,60-70%,750,INR,HYPOTHETICAL flat acquisition cost; edit per band to test scenarios
+cac,70-80%,750,INR,HYPOTHETICAL flat acquisition cost; edit per band to test scenarios
+cac,80-90%,750,INR,HYPOTHETICAL flat acquisition cost; edit per band to test scenarios
+cac,90-100%,750,INR,HYPOTHETICAL flat acquisition cost; edit per band to test scenarios
+cac,Unknown,750,INR,HYPOTHETICAL flat acquisition cost; edit per band to test scenarios

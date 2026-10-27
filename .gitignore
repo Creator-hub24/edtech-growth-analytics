@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+*.db
+.DS_Store
+# raw OULAD download (~450 MB) - fetch with data/download_oulad.py
+data/raw/
