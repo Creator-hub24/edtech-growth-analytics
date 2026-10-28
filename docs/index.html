@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Learner Growth Dashboard · OULAD (real data)</title>
+<meta name="description" content="Funnel, cohort retention and early-engagement analysis on the Open University Learning Analytics Dataset (32,593 enrolments).">
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--text:#111827;--muted:#6b7280;--border:#e5e7eb;--accent:#4f46e5;--grid:#eef0f4;
+--c1:#4f46e5;--c2:#06b6d4;--c3:#10b981;--c4:#f59e0b;--c5:#ef4444;--c6:#8b5cf6}
+@media (prefers-color-scheme:dark){:root{--bg:#0b1020;--card:#131a2e;--text:#e5e7eb;--muted:#9ca3af;--border:#24304d;--accent:#818cf8;--grid:#1f2942}}
+:root[data-theme=light]{--bg:#f6f7fb;--card:#fff;--text:#111827;--muted:#6b7280;--border:#e5e7eb;--accent:#4f46e5;--grid:#eef0f4}
+:root[data-theme=dark]{--bg:#0b1020;--card:#131a2e;--text:#e5e7eb;--muted:#9ca3af;--border:#24304d;--accent:#818cf8;--grid:#1f2942}
+*{box-sizing:border-box}html,body{margin:0}
+body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;-webkit-text-size-adjust:100%}
+.wrap{max-width:1200px;margin:0 auto;padding:16px}
+header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin:8px 0 16px}
+h1{font-size:1.35rem;margin:0 0 4px;line-height:1.25}h2{font-size:1.05rem;margin:0 0 4px}
+.sub{color:var(--muted);font-size:.9rem;margin:0}
+.badge{display:inline-block;font-size:.72rem;font-weight:600;padding:2px 8px;border-radius:999px;background:rgba(16,185,129,.15);color:var(--c3);margin-right:6px}
+.badge.warn{background:rgba(245,158,11,.18);color:var(--c4)}
+button.theme{border:1px solid var(--border);background:var(--card);color:var(--text);border-radius:10px;padding:8px 10px;font-size:.85rem;cursor:pointer;flex-shrink:0}
+.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 14px}
+.kpi .l{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.kpi .v{font-size:1.5rem;font-weight:700;margin-top:2px}.kpi .s{font-size:.78rem;color:var(--muted)}
+.kpi:last-child{grid-column:span 2}
+.grid{display:grid;grid-template-columns:1fr;gap:14px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px;min-width:0}
+.card p.cap{color:var(--muted);font-size:.88rem;margin:0 0 8px}
+.chart{width:100%;height:300px}
+.card.hyp{border:2px dashed var(--c4)}
+.seg-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 8px}
+.seg-tabs button{border:1px solid var(--border);background:transparent;color:var(--text);border-radius:999px;padding:5px 11px;font-size:.8rem;cursor:pointer}
+.seg-tabs button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.insights{margin:0;padding-left:18px;font-size:.92rem}.insights li{margin:4px 0}
+footer{color:var(--muted);font-size:.8rem;padding:20px 4px 30px;line-height:1.6}
+a{color:var(--accent)}
+@media(min-width:720px){.kpis{grid-template-columns:repeat(5,1fr)}.kpi:last-child{grid-column:auto}
+ .grid{grid-template-columns:1fr 1fr}.wide{grid-column:span 2}.chart{height:340px}h1{font-size:1.7rem}.wrap{padding:24px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+ <div>
+  <h1>Learner Growth Dashboard</h1>
+  <p class="sub"><span class="badge">REAL DATA</span>Open University Learning Analytics Dataset · 32,593 enrolments · 7 modules · 4 presentations (2013–2014)</p>
+ </div>
+ <button class="theme" id="themeBtn" aria-label="Toggle theme">◐ Theme</button>
+</header>
+
+<section class="kpis" id="kpis"></section>
+
+<div class="grid">
+ <div class="card wide"><h2>Key takeaways</h2>
+  <ul class="insights" id="insights"></ul></div>
+
+ <div class="card"><h2>Learner funnel</h2>
+  <p class="cap">Registered → used the learning platform (VLE) → submitted a first assessment → passed. Most learners get started; the big loss comes <b>after</b> the first assessment.</p>
+  <div class="chart" id="c_funnel"></div></div>
+
+ <div class="card"><h2>When do learners drop out?</h2>
+  <p class="cap">Share of all withdrawals by timing. About a quarter quit before the course even starts, and half are gone by day 30.</p>
+  <div class="chart" id="c_wtiming"></div></div>
+
+ <div class="card wide"><h2>Retention curves by presentation</h2>
+  <p class="cap">% of registered learners still enrolled on each day since the module start. B = February start, J = October start. The start month makes little difference; 2014 retained worse than 2013.</p>
+  <div class="chart" id="c_curves"></div></div>
+
+ <div class="card"><h2>Early engagement (“magic moment”)</h2>
+  <p class="cap">Distinct days active on the platform in the first 14 days vs outcome (learners still enrolled at day 14). No sharp cliff: every extra day helps, and the biggest jump is from 0 to 1 day.</p>
+  <div class="chart" id="c_magic"></div></div>
+
+ <div class="card"><h2>First assessment score</h2>
+  <p class="cap">Pass rate by score on the first assessment submitted. Crossing 60 is the sharpest threshold in the data.</p>
+  <div class="chart" id="c_score"></div></div>
+
+ <div class="card wide"><h2>Learner segments</h2>
+  <p class="cap">Pass and withdrawal rate by segment. IMD = deprivation band (0–10% = most deprived area).</p>
+  <div class="seg-tabs" id="segTabs"></div>
+  <div class="chart" id="c_seg"></div></div>
+
+ <div class="card wide hyp"><h2><span class="badge warn">HYPOTHETICAL</span>Unit economics scenario</h2>
+  <p class="cap"><b>Not real data.</b> OULAD has no prices, revenue or marketing spend. This uses made-up assumptions (₹2,500 fee per module, refund if withdrawn by day 14, 70% margin, 45%/10% re-enrolment, flat ₹750 acquisition cost). Only the pass and withdrawal behaviour per band is real.</p>
+  <div class="chart" id="c_hyp"></div></div>
+</div>
+
+<footer>
+ Data: Kuzilek, J., Hlosta, M. &amp; Zdrahal, Z. (2017). <i>Open University Learning Analytics dataset.</i> Scientific Data 4, 170171. <a href="https://doi.org/10.1038/sdata.2017.171">doi:10.1038/sdata.2017.171</a> · licensed <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. Derived aggregates shown here; not endorsed by The Open University.<br>
+ Code (MIT) &amp; full analysis: <a href="https://github.com/Creator-hub24/edtech-growth-analytics">github.com/Creator-hub24/edtech-growth-analytics</a> · Built from the repo’s SQL by <code>dashboard/build_dashboard.py</code>.
+</footer>
+</div>
+<script>
+const D = {"kpi":{"registered":32593,"vle":29228,"submitted":25843,"passed":15385,"withdrew":10156,"d90":0.7842788328782254},"funnel":[{"step":1,"stage":"Registered","students":32593,"pct_of_registered":100.0,"step_conversion_pct":null,"students_lost":null},{"step":2,"stage":"First VLE activity","students":29228,"pct_of_registered":89.7,"step_conversion_pct":89.7,"students_lost":3365.0},{"step":3,"stage":"First assessment submitted","students":25843,"pct_of_registered":79.3,"step_conversion_pct":88.4,"students_lost":3385.0},{"step":4,"stage":"Passed (Pass/Distinction)","students":15385,"pct_of_registered":47.2,"step_conversion_pct":59.5,"students_lost":10458.0}],"leak":[{"transition":"First assessment submitted -> Passed (Pass/Distinction)","lost":10458,"drop_pct":40.5,"leak_rank":1},{"transition":"First VLE activity -> First assessment submitted","lost":3385,"drop_pct":11.6,"leak_rank":2},{"transition":"Registered -> First VLE activity","lost":3365,"drop_pct":10.3,"leak_rank":3}],"wtiming":[{"window":"a) before start","withdrawals":2678,"pct":26.6,"cumulative_pct":26.6},{"window":"b) day 0-30","withdrawals":2449,"pct":24.3,"cumulative_pct":50.9},{"window":"c) day 31-90","withdrawals":1904,"pct":18.9,"cumulative_pct":69.8},{"window":"d) day 91-180","withdrawals":2287,"pct":22.7,"cumulative_pct":92.5},{"window":"e) day 181+","withdrawals":754,"pct":7.5,"cumulative_pct":100.0}],"curves":[{"code_presentation":"2013B","day_since_start":-30,"retained_pct":97.8},{"code_presentation":"2013B","day_since_start":-15,"retained_pct":96.2},{"code_presentation":"2013B","day_since_start":0,"retained_pct":93.9},{"code_presentation":"2013B","day_since_start":15,"retained_pct":92.4},{"code_presentation":"2013B","day_since_start":30,"retained_pct":87.8},{"code_presentation":"2013B","day_since_start":45,"retained_pct":86.3},{"code_presentation":"2013B","day_since_start":60,"retained_pct":83.8},{"code_presentation":"2013B","day_since_start":75,"retained_pct":82.6},{"code_presentation":"2013B","day_since_start":90,"retained_pct":80.8},{"code_presentation":"2013B","day_since_start":105,"retained_pct":79.8},{"code_presentation":"2013B","day_since_start":120,"retained_pct":78.9},{"code_presentation":"2013B","day_since_start":135,"retained_pct":77.7},{"code_presentation":"2013B","day_since_start":150,"retained_pct":76.4},{"code_presentation":"2013B","day_since_start":165,"retained_pct":75.1},{"code_presentation":"2013B","day_since_start":180,"retained_pct":73.9},{"code_presentation":"2013B","day_since_start":195,"retained_pct":73.4},{"code_presentation":"2013B","day_since_start":210,"retained_pct":72.7},{"code_presentation":"2013B","day_since_start":225,"retained_pct":71.5},{"code_presentation":"2013B","day_since_start":240,"retained_pct":71.2},{"code_presentation":"2013B","day_since_start":255,"retained_pct":71.2},{"code_presentation":"2013B","day_since_start":270,"retained_pct":71.2},{"code_presentation":"2013J","day_since_start":-30,"retained_pct":96.4},{"code_presentation":"2013J","day_since_start":-15,"retained_pct":94.9},{"code_presentation":"2013J","day_since_start":0,"retained_pct":89.3},{"code_presentation":"2013J","day_since_start":15,"retained_pct":87.8},{"code_presentation":"2013J","day_since_start":30,"retained_pct":86.5},{"code_presentation":"2013J","day_since_start":45,"retained_pct":85.2},{"code_presentation":"2013J","day_since_start":60,"retained_pct":84.0},{"code_presentation":"2013J","day_since_start":75,"retained_pct":83.1},{"code_presentation":"2013J","day_since_start":90,"retained_pct":82.2},{"code_presentation":"2013J","day_since_start":105,"retained_pct":80.4},{"code_presentation":"2013J","day_since_start":120,"retained_pct":79.4},{"code_presentation":"2013J","day_since_start":135,"retained_pct":78.3},{"code_presentation":"2013J","day_since_start":150,"retained_pct":77.5},{"code_presentation":"2013J","day_since_start":165,"retained_pct":76.4},{"code_presentation":"2013J","day_since_start":180,"retained_pct":75.4},{"code_presentation":"2013J","day_since_start":195,"retained_pct":74.9},{"code_presentation":"2013J","day_since_start":210,"retained_pct":74.4},{"code_presentation":"2013J","day_since_start":225,"retained_pct":73.9},{"code_presentation":"2013J","day_since_start":240,"retained_pct":73.2},{"code_presentation":"2013J","day_since_start":255,"retained_pct":73.1},{"code_presentation":"2013J","day_since_start":270,"retained_pct":73.1},{"code_presentation":"2014B","day_since_start":-30,"retained_pct":95.0},{"code_presentation":"2014B","day_since_start":-15,"retained_pct":92.9},{"code_presentation":"2014B","day_since_start":0,"retained_pct":87.5},{"code_presentation":"2014B","day_since_start":15,"retained_pct":85.4},{"code_presentation":"2014B","day_since_start":30,"retained_pct":83.3},{"code_presentation":"2014B","day_since_start":45,"retained_pct":81.1},{"code_presentation":"2014B","day_since_start":60,"retained_pct":79.3},{"code_presentation":"2014B","day_since_start":75,"retained_pct":77.8},{"code_presentation":"2014B","day_since_start":90,"retained_pct":76.6},{"code_presentation":"2014B","day_since_start":105,"retained_pct":75.3},{"code_presentation":"2014B","day_since_start":120,"retained_pct":74.3},{"code_presentation":"2014B","day_since_start":135,"retained_pct":73.0},{"code_presentation":"2014B","day_since_start":150,"retained_pct":71.9},{"code_presentation":"2014B","day_since_start":165,"retained_pct":70.8},{"code_presentation":"2014B","day_since_start":180,"retained_pct":69.6},{"code_presentation":"2014B","day_since_start":195,"retained_pct":69.0},{"code_presentation":"2014B","day_since_start":210,"retained_pct":68.0},{"code_presentation":"2014B","day_since_start":225,"retained_pct":67.1},{"code_presentation":"2014B","day_since_start":240,"retained_pct":66.6},{"code_presentation":"2014B","day_since_start":255,"retained_pct":66.6},{"code_presentation":"2014B","day_since_start":270,"retained_pct":66.6},{"code_presentation":"2014J","day_since_start":-30,"retained_pct":96.9},{"code_presentation":"2014J","day_since_start":-15,"retained_pct":95.2},{"code_presentation":"2014J","day_since_start":0,"retained_pct":92.0},{"code_presentation":"2014J","day_since_start":15,"retained_pct":83.1},{"code_presentation":"2014J","day_since_start":30,"retained_pct":81.7},{"code_presentation":"2014J","day_since_start":45,"retained_pct":80.1},{"code_presentation":"2014J","day_since_start":60,"retained_pct":78.3},{"code_presentation":"2014J","day_since_start":75,"retained_pct":76.5},{"code_presentation":"2014J","day_since_start":90,"retained_pct":75.8},{"code_presentation":"2014J","day_since_start":105,"retained_pct":74.6},{"code_presentation":"2014J","day_since_start":120,"retained_pct":73.4},{"code_presentation":"2014J","day_since_start":135,"retained_pct":72.3},{"code_presentation":"2014J","day_since_start":150,"retained_pct":71.1},{"code_presentation":"2014J","day_since_start":165,"retained_pct":69.5},{"code_presentation":"2014J","day_since_start":180,"retained_pct":68.6},{"code_presentation":"2014J","day_since_start":195,"retained_pct":68.1},{"code_presentation":"2014J","day_since_start":210,"retained_pct":67.6},{"code_presentation":"2014J","day_since_start":225,"retained_pct":67.4},{"code_presentation":"2014J","day_since_start":240,"retained_pct":66.8},{"code_presentation":"2014J","day_since_start":255,"retained_pct":66.8},{"code_presentation":"2014J","day_since_start":270,"retained_pct":66.8}],"retention":[{"code_presentation":"2013B","start_month":"February","registered":4684,"d0_pct":93.9,"d30_pct":87.8,"d60_pct":83.8,"d90_pct":80.8,"d180_pct":73.9,"pass_pct":44.7},{"code_presentation":"2013J","start_month":"October","registered":8845,"d0_pct":89.3,"d30_pct":86.5,"d60_pct":84.0,"d90_pct":82.2,"d180_pct":75.4,"pass_pct":50.6},{"code_presentation":"2014B","start_month":"February","registered":7804,"d0_pct":87.5,"d30_pct":83.3,"d60_pct":79.3,"d90_pct":76.6,"d180_pct":69.6,"pass_pct":43.0},{"code_presentation":"2014J","start_month":"October","registered":11260,"d0_pct":92.0,"d30_pct":81.7,"d60_pct":78.3,"d90_pct":75.8,"d180_pct":68.6,"pass_pct":48.5}],"magic":[{"active_days_first_14":"0","students":2760,"pass_pct":27.7,"withdrawal_pct":28.1,"pass_jump_pts":null},{"active_days_first_14":"1","students":2905,"pass_pct":39.9,"withdrawal_pct":23.8,"pass_jump_pts":12.2},{"active_days_first_14":"2","students":2887,"pass_pct":45.0,"withdrawal_pct":22.1,"pass_jump_pts":5.1},{"active_days_first_14":"3","students":2974,"pass_pct":52.2,"withdrawal_pct":21.1,"pass_jump_pts":7.2},{"active_days_first_14":"4","students":2652,"pass_pct":53.1,"withdrawal_pct":21.2,"pass_jump_pts":0.9},{"active_days_first_14":"5","students":2405,"pass_pct":57.5,"withdrawal_pct":20.2,"pass_jump_pts":4.4},{"active_days_first_14":"6","students":2114,"pass_pct":59.2,"withdrawal_pct":19.6,"pass_jump_pts":1.7},{"active_days_first_14":"7","students":1974,"pass_pct":62.6,"withdrawal_pct":19.5,"pass_jump_pts":3.4},{"active_days_first_14":"8","students":1650,"pass_pct":65.4,"withdrawal_pct":17.7,"pass_jump_pts":2.8},{"active_days_first_14":"9","students":1406,"pass_pct":69.2,"withdrawal_pct":15.6,"pass_jump_pts":3.8},{"active_days_first_14":"10+","students":4392,"pass_pct":74.6,"withdrawal_pct":13.6,"pass_jump_pts":5.4}],"score":[{"first_score":"a) <40","students":1632,"pass_pct":32.8,"withdrawal_pct":39.3},{"first_score":"b) 40-59","students":3062,"pass_pct":33.3,"withdrawal_pct":27.8},{"first_score":"c) 60-79","students":9601,"pass_pct":56.5,"withdrawal_pct":18.6},{"first_score":"d) 80+","students":11525,"pass_pct":72.9,"withdrawal_pct":12.1}],"segments":{"imd_band":[{"dimension":"imd_band","segment":"0-10%","students":3311,"submit_pct":73.3,"pass_pct":35.2,"withdrawal_pct":37.2,"rank_in_dimension":11,"pts_vs_dimension_avg":-13.7},{"dimension":"imd_band","segment":"10-20","students":3516,"submit_pct":74.2,"pass_pct":38.6,"withdrawal_pct":35.4,"rank_in_dimension":10,"pts_vs_dimension_avg":-10.3},{"dimension":"imd_band","segment":"20-30%","students":3654,"submit_pct":75.2,"pass_pct":40.7,"withdrawal_pct":36.2,"rank_in_dimension":9,"pts_vs_dimension_avg":-8.2},{"dimension":"imd_band","segment":"30-40%","students":3539,"submit_pct":78.6,"pass_pct":46.9,"withdrawal_pct":30.9,"rank_in_dimension":7,"pts_vs_dimension_avg":-2.0},{"dimension":"imd_band","segment":"40-50%","students":3256,"submit_pct":78.4,"pass_pct":46.6,"withdrawal_pct":32.0,"rank_in_dimension":8,"pts_vs_dimension_avg":-2.3},{"dimension":"imd_band","segment":"50-60%","students":3124,"submit_pct":81.5,"pass_pct":48.8,"withdrawal_pct":28.8,"rank_in_dimension":6,"pts_vs_dimension_avg":-0.1},{"dimension":"imd_band","segment":"60-70%","students":2905,"submit_pct":82.2,"pass_pct":51.9,"withdrawal_pct":29.6,"rank_in_dimension":4,"pts_vs_dimension_avg":3.0},{"dimension":"imd_band","segment":"70-80%","students":2879,"submit_pct":82.7,"pass_pct":51.5,"withdrawal_pct":27.7,"rank_in_dimension":5,"pts_vs_dimension_avg":2.6},{"dimension":"imd_band","segment":"80-90%","students":2762,"submit_pct":82.2,"pass_pct":54.1,"withdrawal_pct":28.0,"rank_in_dimension":3,"pts_vs_dimension_avg":5.2},{"dimension":"imd_band","segment":"90-100%","students":2536,"submit_pct":84.4,"pass_pct":57.5,"withdrawal_pct":25.9,"rank_in_dimension":2,"pts_vs_dimension_avg":8.6},{"dimension":"imd_band","segment":"Unknown","students":1111,"submit_pct":89.8,"pass_pct":65.7,"withdrawal_pct":21.2,"rank_in_dimension":1,"pts_vs_dimension_avg":16.8}],"highest_education":[{"dimension":"highest_education","segment":"A Level or Equivalent","students":14045,"submit_pct":81.9,"pass_pct":52.0,"withdrawal_pct":28.7,"rank_in_dimension":3,"pts_vs_dimension_avg":3.5},{"dimension":"highest_education","segment":"HE Qualification","students":4730,"submit_pct":84.4,"pass_pct":56.2,"withdrawal_pct":27.1,"rank_in_dimension":2,"pts_vs_dimension_avg":7.7},{"dimension":"highest_education","segment":"Lower Than A Level","students":13158,"submit_pct":74.8,"pass_pct":38.9,"withdrawal_pct":35.1,"rank_in_dimension":4,"pts_vs_dimension_avg":-9.6},{"dimension":"highest_education","segment":"No Formal quals","students":347,"submit_pct":66.3,"pass_pct":29.7,"withdrawal_pct":42.9,"rank_in_dimension":5,"pts_vs_dimension_avg":-18.8},{"dimension":"highest_education","segment":"Post Graduate Qualification","students":313,"submit_pct":89.5,"pass_pct":65.5,"withdrawal_pct":23.6,"rank_in_dimension":1,"pts_vs_dimension_avg":17.0}],"age_band":[{"dimension":"age_band","segment":"0-35","students":22944,"submit_pct":78.2,"pass_pct":45.0,"withdrawal_pct":32.2,"rank_in_dimension":3,"pts_vs_dimension_avg":-7.9},{"dimension":"age_band","segment":"35-55","students":9433,"submit_pct":81.7,"pass_pct":52.2,"withdrawal_pct":28.8,"rank_in_dimension":2,"pts_vs_dimension_avg":-0.7},{"dimension":"age_band","segment":"55<=","students":216,"submit_pct":86.6,"pass_pct":61.6,"withdrawal_pct":25.0,"rank_in_dimension":1,"pts_vs_dimension_avg":8.7}],"prev_attempts":[{"dimension":"prev_attempts","segment":"0","students":28421,"submit_pct":79.7,"pass_pct":49.3,"withdrawal_pct":30.6,"rank_in_dimension":1,"pts_vs_dimension_avg":12.2},{"dimension":"prev_attempts","segment":"1","students":3299,"submit_pct":77.0,"pass_pct":34.6,"withdrawal_pct":34.9,"rank_in_dimension":2,"pts_vs_dimension_avg":-2.5},{"dimension":"prev_attempts","segment":"2+","students":873,"submit_pct":75.1,"pass_pct":27.5,"withdrawal_pct":36.8,"rank_in_dimension":3,"pts_vs_dimension_avg":-9.6}],"region":[{"dimension":"region","segment":"East Anglian Region","students":3340,"submit_pct":79.3,"pass_pct":49.0,"withdrawal_pct":30.1,"rank_in_dimension":6,"pts_vs_dimension_avg":1.4},{"dimension":"region","segment":"East Midlands Region","students":2365,"submit_pct":77.8,"pass_pct":45.7,"withdrawal_pct":34.8,"rank_in_dimension":8,"pts_vs_dimension_avg":-1.9},{"dimension":"region","segment":"Ireland","students":1184,"submit_pct":88.2,"pass_pct":54.9,"withdrawal_pct":23.1,"rank_in_dimension":1,"pts_vs_dimension_avg":7.3},{"dimension":"region","segment":"London Region","students":3216,"submit_pct":75.4,"pass_pct":42.4,"withdrawal_pct":34.5,"rank_in_dimension":12,"pts_vs_dimension_avg":-5.2},{"dimension":"region","segment":"North Region","students":1823,"submit_pct":79.1,"pass_pct":50.5,"withdrawal_pct":31.5,"rank_in_dimension":4,"pts_vs_dimension_avg":2.9},{"dimension":"region","segment":"North Western Region","students":2906,"submit_pct":74.9,"pass_pct":40.2,"withdrawal_pct":35.6,"rank_in_dimension":13,"pts_vs_dimension_avg":-7.4},{"dimension":"region","segment":"Scotland","students":3446,"submit_pct":82.4,"pass_pct":49.0,"withdrawal_pct":26.3,"rank_in_dimension":6,"pts_vs_dimension_avg":1.4},{"dimension":"region","segment":"South East Region","students":2111,"submit_pct":80.0,"pass_pct":51.5,"withdrawal_pct":30.7,"rank_in_dimension":3,"pts_vs_dimension_avg":3.9},{"dimension":"region","segment":"South Region","students":3092,"submit_pct":81.4,"pass_pct":52.4,"withdrawal_pct":30.0,"rank_in_dimension":2,"pts_vs_dimension_avg":4.8},{"dimension":"region","segment":"South West Region","students":2436,"submit_pct":80.5,"pass_pct":49.8,"withdrawal_pct":31.1,"rank_in_dimension":5,"pts_vs_dimension_avg":2.2},{"dimension":"region","segment":"Wales","students":2086,"submit_pct":83.2,"pass_pct":45.2,"withdrawal_pct":25.1,"rank_in_dimension":9,"pts_vs_dimension_avg":-2.4},{"dimension":"region","segment":"West Midlands Region","students":2582,"submit_pct":76.2,"pass_pct":43.3,"withdrawal_pct":35.4,"rank_in_dimension":11,"pts_vs_dimension_avg":-4.3},{"dimension":"region","segment":"Yorkshire Region","students":2006,"submit_pct":77.6,"pass_pct":44.9,"withdrawal_pct":32.8,"rank_in_dimension":10,"pts_vs_dimension_avg":-2.7}]},"modules":[{"code_module":"AAA","registered":748,"reg_to_submit_pct":94.3,"submit_to_pass_pct":75.3,"pass_rate_pct":71.0,"withdrawal_pct":16.8,"pass_rank":1},{"code_module":"GGG","registered":2534,"reg_to_submit_pct":83.3,"submit_to_pass_pct":71.7,"pass_rate_pct":59.7,"withdrawal_pct":11.5,"pass_rank":2},{"code_module":"EEE","registered":2934,"reg_to_submit_pct":78.3,"submit_to_pass_pct":71.8,"pass_rate_pct":56.2,"withdrawal_pct":24.6,"pass_rank":3},{"code_module":"BBB","registered":7909,"reg_to_submit_pct":76.8,"submit_to_pass_pct":61.8,"pass_rate_pct":47.5,"withdrawal_pct":30.2,"pass_rank":4},{"code_module":"FFF","registered":7762,"reg_to_submit_pct":81.1,"submit_to_pass_pct":58.0,"pass_rate_pct":47.0,"withdrawal_pct":31.0,"pass_rank":5},{"code_module":"DDD","registered":6272,"reg_to_submit_pct":78.8,"submit_to_pass_pct":52.8,"pass_rate_pct":41.6,"withdrawal_pct":35.9,"pass_rank":6},{"code_module":"CCC","registered":4434,"reg_to_submit_pct":77.0,"submit_to_pass_pct":49.2,"pass_rate_pct":37.8,"withdrawal_pct":44.5,"pass_rank":7}],"hyp":[{"imd_band":"0-10%","enrolments":3311,"paying_after_refund_pct":81.9,"real_pass_pct":35.2,"hyp_cac_inr":750.0,"hyp_ltv_inr":1846.0,"hyp_ltv_to_cac":2.46,"hyp_payback_months_9mo_module":4.7,"rank":11},{"imd_band":"10-20","enrolments":3516,"paying_after_refund_pct":82.4,"real_pass_pct":38.6,"hyp_cac_inr":750.0,"hyp_ltv_inr":1885.0,"hyp_ltv_to_cac":2.51,"hyp_payback_months_9mo_module":4.7,"rank":10},{"imd_band":"20-30%","enrolments":3654,"paying_after_refund_pct":84.0,"real_pass_pct":40.7,"hyp_cac_inr":750.0,"hyp_ltv_inr":1940.0,"hyp_ltv_to_cac":2.59,"hyp_payback_months_9mo_module":4.6,"rank":9},{"imd_band":"30-40%","enrolments":3539,"paying_after_refund_pct":86.5,"real_pass_pct":46.9,"hyp_cac_inr":750.0,"hyp_ltv_inr":2058.0,"hyp_ltv_to_cac":2.74,"hyp_payback_months_9mo_module":4.5,"rank":7},{"imd_band":"40-50%","enrolments":3256,"paying_after_refund_pct":85.3,"real_pass_pct":46.6,"hyp_cac_inr":750.0,"hyp_ltv_inr":2025.0,"hyp_ltv_to_cac":2.7,"hyp_payback_months_9mo_module":4.5,"rank":8},{"imd_band":"50-60%","enrolments":3124,"paying_after_refund_pct":87.9,"real_pass_pct":48.8,"hyp_cac_inr":750.0,"hyp_ltv_inr":2109.0,"hyp_ltv_to_cac":2.81,"hyp_payback_months_9mo_module":4.4,"rank":6},{"imd_band":"60-70%","enrolments":2905,"paying_after_refund_pct":88.3,"real_pass_pct":51.9,"hyp_cac_inr":750.0,"hyp_ltv_inr":2152.0,"hyp_ltv_to_cac":2.87,"hyp_payback_months_9mo_module":4.4,"rank":5},{"imd_band":"70-80%","enrolments":2879,"paying_after_refund_pct":88.8,"real_pass_pct":51.5,"hyp_cac_inr":750.0,"hyp_ltv_inr":2160.0,"hyp_ltv_to_cac":2.88,"hyp_payback_months_9mo_module":4.3,"rank":4},{"imd_band":"80-90%","enrolments":2762,"paying_after_refund_pct":87.7,"real_pass_pct":54.1,"hyp_cac_inr":750.0,"hyp_ltv_inr":2160.0,"hyp_ltv_to_cac":2.88,"hyp_payback_months_9mo_module":4.4,"rank":3},{"imd_band":"90-100%","enrolments":2536,"paying_after_refund_pct":89.5,"real_pass_pct":57.5,"hyp_cac_inr":750.0,"hyp_ltv_inr":2242.0,"hyp_ltv_to_cac":2.99,"hyp_payback_months_9mo_module":4.3,"rank":2},{"imd_band":"Unknown","enrolments":1111,"paying_after_refund_pct":93.6,"real_pass_pct":65.7,"hyp_cac_inr":750.0,"hyp_ltv_inr":2445.0,"hyp_ltv_to_cac":3.26,"hyp_payback_months_9mo_module":4.1,"rank":1}]};
+const fmt = n => n.toLocaleString('en-IN'), pct = (a,b) => (100*a/b).toFixed(1)+'%';
+const K = D.kpi;
+const kpis = [["Registered", fmt(K.registered), "enrolments"],
+  ["Used platform", pct(K.vle,K.registered), fmt(K.vle)+" learners"],
+  ["Submitted", pct(K.submitted,K.registered), "≥1 assessment"],
+  ["Passed", pct(K.passed,K.registered), "pass or distinction"],
+  ["Withdrew", pct(K.withdrew,K.registered), "day-90 retention "+(100*K.d90).toFixed(1)+"%"]];
+document.getElementById('kpis').innerHTML = kpis.map(k=>`<div class="kpi"><div class="l">${k[0]}</div><div class="v">${k[1]}</div><div class="s">${k[2]}</div></div>`).join('');
+const leak = D.leak[0], w = D.wtiming, mg = D.magic;
+const m0 = mg[0], m10 = mg[mg.length-1];
+const sc = Object.fromEntries(D.score.map(r=>[r.first_score, r.pass_pct]));
+const imd = D.segments.imd_band, pa = D.segments.prev_attempts;
+const fIMD = s => (imd.find(r=>r.segment===s)||{}).pass_pct;
+document.getElementById('insights').innerHTML = [
+  `<b>Biggest leak:</b> ${leak.transition}: ${leak.drop_pct}% lost (${fmt(leak.lost)} learners).`,
+  `<b>Churn is front-loaded:</b> ${w[0].pct}% of withdrawals happen before the start and ${w[1].cumulative_pct}% by day 30.`,
+  `<b>Early engagement:</b> pass rate goes from ${m0.pass_pct}% (0 active days in the first 14) to ${m10.pass_pct}% (10+ days).`,
+  `<b>First score ≥ 60:</b> ${sc['c) 60-79']}% pass vs ${sc['b) 40-59']}% for 40–59.`,
+  `<b>At-risk segments:</b> most-deprived IMD band ${fIMD('0-10%')}% pass vs ${fIMD('90-100%')}% least deprived; 2+ previous attempts ${pa.find(r=>r.segment==='2+').pass_pct}%.`
+].map(x=>`<li>${x}</li>`).join('');
+
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const C = () => ['--c1','--c2','--c3','--c4','--c5','--c6'].map(css);
+const small = () => window.innerWidth < 720;
+function layout(extra={}) {
+  return Object.assign({paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)',
+    font:{family:'Inter,system-ui,sans-serif', color:css('--text'), size: small()?11:12},
+    margin:{l:small()?40:50, r:small()?12:20, t:16, b:small()?90:60}, autosize:true,
+    legend:{orientation:'h', y:small()?-0.32:-0.2, x:0, yanchor:'top'}, hoverlabel:{font:{size:12}},
+    xaxis:{gridcolor:css('--grid'), zeroline:false, automargin:true}, yaxis:{gridcolor:css('--grid'), zeroline:false, automargin:true}}, extra);
+}
+const cfg = {responsive:true, displayModeBar:false};
+let segDim = 'imd_band';
+const segNames = {imd_band:'IMD band', highest_education:'Education', age_band:'Age', prev_attempts:'Prev. attempts', region:'Region'};
+function draw() {
+  const c = C();
+  Plotly.react('c_funnel', [{type:'funnel', y:D.funnel.map(r=>small()? r.stage.replace('First assessment submitted','1st assessment').replace('Passed (Pass/Distinction)','Passed').replace('First VLE activity','Used VLE') : r.stage),
+    x:D.funnel.map(r=>r.students), textinfo:'value+percent initial', marker:{color:c.slice(0,4)}, connector:{line:{color:css('--border')}}}],
+    layout({margin:{l:small()?85:160,r:10,t:10,b:20}, yaxis:{automargin:true}}), cfg);
+  Plotly.react('c_wtiming', [{type:'bar', x:w.map(r=>r.window.slice(3)), y:w.map(r=>r.pct), name:'% of withdrawals', marker:{color:c[4]}, text:w.map(r=>r.pct+'%'), textposition:'outside', cliponaxis:false},
+    {type:'scatter', mode:'lines+markers', x:w.map(r=>r.window.slice(3)), y:w.map(r=>r.cumulative_pct), name:'cumulative %', line:{color:c[0], width:3}}],
+    layout({yaxis:{ticksuffix:'%', gridcolor:css('--grid'), range:[0,105]}}), cfg);
+  const pres = [...new Set(D.curves.map(r=>r.code_presentation))];
+  Plotly.react('c_curves', pres.map((p,i)=>{const g=D.curves.filter(r=>r.code_presentation===p);
+    return {type:'scatter', mode:'lines+markers', name:p+(p.endsWith('B')?' (Feb)':' (Oct)'), x:g.map(r=>r.day_since_start), y:g.map(r=>r.retained_pct),
+      line:{color:c[i], width:3, dash:p.endsWith('B')?'dot':'solid'}, marker:{size:small()?4:6}}}),
+    layout({xaxis:{title:{text:'days since module start'}, gridcolor:css('--grid')}, yaxis:{ticksuffix:'%', gridcolor:css('--grid')},
+      shapes:[{type:'line', x0:0, x1:0, yref:'paper', y0:0, y1:1, line:{dash:'dot', color:css('--muted')}}]}), cfg);
+  Plotly.react('c_magic', [{type:'bar', x:mg.map(r=>r.active_days_first_14), y:mg.map(r=>r.pass_pct), name:'Pass %', marker:{color:c[2]}},
+    {type:'scatter', mode:'lines+markers', x:mg.map(r=>r.active_days_first_14), y:mg.map(r=>r.withdrawal_pct), name:'Withdrawal %', line:{color:c[4], width:3}}],
+    layout({xaxis:{title:{text:'active days in first 14', standoff:4}, type:'category', gridcolor:css('--grid')}, yaxis:{ticksuffix:'%', gridcolor:css('--grid')}}), cfg);
+  Plotly.react('c_score', [{type:'bar', x:D.score.map(r=>r.first_score.slice(3)), y:D.score.map(r=>r.pass_pct), name:'Pass %', marker:{color:c[0]}, text:D.score.map(r=>r.pass_pct+'%'), textposition:'outside', cliponaxis:false},
+    {type:'bar', x:D.score.map(r=>r.first_score.slice(3)), y:D.score.map(r=>r.withdrawal_pct), name:'Withdrawal %', marker:{color:c[4]}}],
+    layout({barmode:'group', xaxis:{title:{text:'first assessment score', standoff:4}, gridcolor:css('--grid')}, yaxis:{ticksuffix:'%', gridcolor:css('--grid'), range:[0,85]}}), cfg);
+  const sg = D.segments[segDim];
+  const horiz = small() || segDim==='region' || segDim==='highest_education';
+  const lab = sg.map(r=>r.segment.replace(' Qualification','').replace(' or Equivalent','').replace(' Region',''));
+  const tr = (key,name,col) => horiz ? {type:'bar', orientation:'h', y:lab, x:sg.map(r=>r[key]), name, marker:{color:col}} : {type:'bar', x:lab, y:sg.map(r=>r[key]), name, marker:{color:col}};
+  const h = horiz ? Math.max(300, sg.length*(small()?34:28)+80) : (small()?300:340);
+  document.getElementById('c_seg').style.height = h+'px';
+  Plotly.react('c_seg', [tr('pass_pct','Pass %',c[2]), tr('withdrawal_pct','Withdrawal %',c[4])],
+    layout({barmode:'group', margin:{l:horiz?(small()?95:150):50, r:10, t:10, b:50},
+      xaxis:{gridcolor:css('--grid'), ticksuffix: horiz?'%':'', automargin:true}, yaxis:{gridcolor:css('--grid'), ticksuffix: horiz?'':'%', automargin:true, autorange: horiz?'reversed':true}}), cfg);
+  Plotly.react('c_hyp', [{type:'bar', x:D.hyp.map(r=>r.imd_band), y:D.hyp.map(r=>r.hyp_ltv_to_cac), marker:{color:c[5]}, text:D.hyp.map(r=>r.hyp_ltv_to_cac.toFixed(2)+'x'), textposition:'outside', cliponaxis:false,
+    customdata:D.hyp.map(r=>[r.real_pass_pct, r.hyp_ltv_inr]), hovertemplate:'IMD %{x}<br>LTV:CAC %{y:.2f}x<br>real pass %{customdata[0]}%<br>hyp. LTV ₹%{customdata[1]}<extra></extra>'}],
+    layout({showlegend:false, xaxis:{title:{text:'IMD band (hypothetical LTV:CAC)', standoff:4}, tickangle:small()?-45:0, gridcolor:css('--grid')}, yaxis:{range:[0,3.6], ticksuffix:'x', gridcolor:css('--grid')}}), cfg);
+}
+document.getElementById('segTabs').innerHTML = Object.entries(segNames).map(([k,v])=>`<button data-k="${k}" class="${k===segDim?'on':''}">${v}</button>`).join('');
+document.getElementById('segTabs').addEventListener('click', e => { const k=e.target.dataset.k; if(!k) return; segDim=k;
+  document.querySelectorAll('#segTabs button').forEach(b=>b.classList.toggle('on', b.dataset.k===k)); draw(); });
+document.getElementById('themeBtn').addEventListener('click', () => { const r=document.documentElement;
+  const dark = r.dataset.theme ? r.dataset.theme==='dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  r.dataset.theme = dark ? 'light' : 'dark'; draw(); });
+let lastSmall = small(); window.addEventListener('resize', () => { if (small()!==lastSmall) { lastSmall=small(); draw(); } });
+draw();
+// keep charts fitted to their cards (orientation change, late font/layout shifts)
+const ro = new ResizeObserver(es => es.forEach(e => { if (e.target.data) Plotly.Plots.resize(e.target); }));
+document.querySelectorAll('.chart').forEach(el => ro.observe(el));
+</script>
+</body>
+</html>

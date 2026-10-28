@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Learner Growth Dashboard · OULAD (real data)</title>
+<meta name="description" content="Funnel, cohort retention and early-engagement analysis on the Open University Learning Analytics Dataset (32,593 enrolments).">
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--text:#111827;--muted:#6b7280;--border:#e5e7eb;--accent:#4f46e5;--grid:#eef0f4;
+--c1:#4f46e5;--c2:#06b6d4;--c3:#10b981;--c4:#f59e0b;--c5:#ef4444;--c6:#8b5cf6}
+@media (prefers-color-scheme:dark){:root{--bg:#0b1020;--card:#131a2e;--text:#e5e7eb;--muted:#9ca3af;--border:#24304d;--accent:#818cf8;--grid:#1f2942}}
+:root[data-theme=light]{--bg:#f6f7fb;--card:#fff;--text:#111827;--muted:#6b7280;--border:#e5e7eb;--accent:#4f46e5;--grid:#eef0f4}
+:root[data-theme=dark]{--bg:#0b1020;--card:#131a2e;--text:#e5e7eb;--muted:#9ca3af;--border:#24304d;--accent:#818cf8;--grid:#1f2942}
+*{box-sizing:border-box}html,body{margin:0}
+body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;-webkit-text-size-adjust:100%}
+.wrap{max-width:1200px;margin:0 auto;padding:16px}
+header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin:8px 0 16px}
+h1{font-size:1.35rem;margin:0 0 4px;line-height:1.25}h2{font-size:1.05rem;margin:0 0 4px}
+.sub{color:var(--muted);font-size:.9rem;margin:0}
+.badge{display:inline-block;font-size:.72rem;font-weight:600;padding:2px 8px;border-radius:999px;background:rgba(16,185,129,.15);color:var(--c3);margin-right:6px}
+.badge.warn{background:rgba(245,158,11,.18);color:var(--c4)}
+button.theme{border:1px solid var(--border);background:var(--card);color:var(--text);border-radius:10px;padding:8px 10px;font-size:.85rem;cursor:pointer;flex-shrink:0}
+.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 14px}
+.kpi .l{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.kpi .v{font-size:1.5rem;font-weight:700;margin-top:2px}.kpi .s{font-size:.78rem;color:var(--muted)}
+.kpi:last-child{grid-column:span 2}
+.grid{display:grid;grid-template-columns:1fr;gap:14px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px;min-width:0}
+.card p.cap{color:var(--muted);font-size:.88rem;margin:0 0 8px}
+.chart{width:100%;height:300px}
+.card.hyp{border:2px dashed var(--c4)}
+.seg-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 8px}
+.seg-tabs button{border:1px solid var(--border);background:transparent;color:var(--text);border-radius:999px;padding:5px 11px;font-size:.8rem;cursor:pointer}
+.seg-tabs button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.insights{margin:0;padding-left:18px;font-size:.92rem}.insights li{margin:4px 0}
+footer{color:var(--muted);font-size:.8rem;padding:20px 4px 30px;line-height:1.6}
+a{color:var(--accent)}
+@media(min-width:720px){.kpis{grid-template-columns:repeat(5,1fr)}.kpi:last-child{grid-column:auto}
+ .grid{grid-template-columns:1fr 1fr}.wide{grid-column:span 2}.chart{height:340px}h1{font-size:1.7rem}.wrap{padding:24px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+ <div>
+  <h1>Learner Growth Dashboard</h1>
+  <p class="sub"><span class="badge">REAL DATA</span>Open University Learning Analytics Dataset · 32,593 enrolments · 7 modules · 4 presentations (2013–2014)</p>
+ </div>
+ <button class="theme" id="themeBtn" aria-label="Toggle theme">◐ Theme</button>
+</header>
+
+<section class="kpis" id="kpis"></section>
+
+<div class="grid">
+ <div class="card wide"><h2>Key takeaways</h2>
+  <ul class="insights" id="insights"></ul></div>
+
+ <div class="card"><h2>Learner funnel</h2>
+  <p class="cap">Registered → used the learning platform (VLE) → submitted a first assessment → passed. Most learners get started; the big loss comes <b>after</b> the first assessment.</p>
+  <div class="chart" id="c_funnel"></div></div>
+
+ <div class="card"><h2>When do learners drop out?</h2>
+  <p class="cap">Share of all withdrawals by timing. About a quarter quit before the course even starts, and half are gone by day 30.</p>
+  <div class="chart" id="c_wtiming"></div></div>
+
+ <div class="card wide"><h2>Retention curves by presentation</h2>
+  <p class="cap">% of registered learners still enrolled on each day since the module start. B = February start, J = October start. The start month makes little difference; 2014 retained worse than 2013.</p>
+  <div class="chart" id="c_curves"></div></div>
+
+ <div class="card"><h2>Early engagement (“magic moment”)</h2>
+  <p class="cap">Distinct days active on the platform in the first 14 days vs outcome (learners still enrolled at day 14). No sharp cliff: every extra day helps, and the biggest jump is from 0 to 1 day.</p>
+  <div class="chart" id="c_magic"></div></div>
+
+ <div class="card"><h2>First assessment score</h2>
+  <p class="cap">Pass rate by score on the first assessment submitted. Crossing 60 is the sharpest threshold in the data.</p>
+  <div class="chart" id="c_score"></div></div>
+
+ <div class="card wide"><h2>Learner segments</h2>
+  <p class="cap">Pass and withdrawal rate by segment. IMD = deprivation band (0–10% = most deprived area).</p>
+  <div class="seg-tabs" id="segTabs"></div>
+  <div class="chart" id="c_seg"></div></div>
+
+ <div class="card wide hyp"><h2><span class="badge warn">HYPOTHETICAL</span>Unit economics scenario</h2>
+  <p class="cap"><b>Not real data.</b> OULAD has no prices, revenue or marketing spend. This uses made-up assumptions (₹2,500 fee per module, refund if withdrawn by day 14, 70% margin, 45%/10% re-enrolment, flat ₹750 acquisition cost). Only the pass and withdrawal behaviour per band is real.</p>
+  <div class="chart" id="c_hyp"></div></div>
+</div>
+
+<footer>
+ Data: Kuzilek, J., Hlosta, M. &amp; Zdrahal, Z. (2017). <i>Open University Learning Analytics dataset.</i> Scientific Data 4, 170171. <a href="https://doi.org/10.1038/sdata.2017.171">doi:10.1038/sdata.2017.171</a> · licensed <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. Derived aggregates shown here; not endorsed by The Open University.<br>
+ Code (MIT) &amp; full analysis: <a href="https://github.com/Creator-hub24/edtech-growth-analytics">github.com/Creator-hub24/edtech-growth-analytics</a> · Built from the repo’s SQL by <code>dashboard/build_dashboard.py</code>.
+</footer>
+</div>
+<script>
+const D = /*__DATA__*/null;
+const fmt = n => n.toLocaleString('en-IN'), pct = (a,b) => (100*a/b).toFixed(1)+'%';
+const K = D.kpi;
+const kpis = [["Registered", fmt(K.registered), "enrolments"],
+  ["Used platform", pct(K.vle,K.registered), fmt(K.vle)+" learners"],
+  ["Submitted", pct(K.submitted,K.registered), "≥1 assessment"],
+  ["Passed", pct(K.passed,K.registered), "pass or distinction"],
+  ["Withdrew", pct(K.withdrew,K.registered), "day-90 retention "+(100*K.d90).toFixed(1)+"%"]];
+document.getElementById('kpis').innerHTML = kpis.map(k=>`<div class="kpi"><div class="l">${k[0]}</div><div class="v">${k[1]}</div><div class="s">${k[2]}</div></div>`).join('');
+const leak = D.leak[0], w = D.wtiming, mg = D.magic;
+const m0 = mg[0], m10 = mg[mg.length-1];
+const sc = Object.fromEntries(D.score.map(r=>[r.first_score, r.pass_pct]));
+const imd = D.segments.imd_band, pa = D.segments.prev_attempts;
+const fIMD = s => (imd.find(r=>r.segment===s)||{}).pass_pct;
+document.getElementById('insights').innerHTML = [
+  `<b>Biggest leak:</b> ${leak.transition}: ${leak.drop_pct}% lost (${fmt(leak.lost)} learners).`,
+  `<b>Churn is front-loaded:</b> ${w[0].pct}% of withdrawals happen before the start and ${w[1].cumulative_pct}% by day 30.`,
+  `<b>Early engagement:</b> pass rate goes from ${m0.pass_pct}% (0 active days in the first 14) to ${m10.pass_pct}% (10+ days).`,
+  `<b>First score ≥ 60:</b> ${sc['c) 60-79']}% pass vs ${sc['b) 40-59']}% for 40–59.`,
+  `<b>At-risk segments:</b> most-deprived IMD band ${fIMD('0-10%')}% pass vs ${fIMD('90-100%')}% least deprived; 2+ previous attempts ${pa.find(r=>r.segment==='2+').pass_pct}%.`
+].map(x=>`<li>${x}</li>`).join('');
+
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const C = () => ['--c1','--c2','--c3','--c4','--c5','--c6'].map(css);
+const small = () => window.innerWidth < 720;
+function layout(extra={}) {
+  return Object.assign({paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)',
+    font:{family:'Inter,system-ui,sans-serif', color:css('--text'), size: small()?11:12},
+    margin:{l:small()?40:50, r:small()?12:20, t:16, b:small()?90:60}, autosize:true,
+    legend:{orientation:'h', y:small()?-0.32:-0.2, x:0, yanchor:'top'}, hoverlabel:{font:{size:12}},
+    xaxis:{gridcolor:css('--grid'), zeroline:false, automargin:true}, yaxis:{gridcolor:css('--grid'), zeroline:false, automargin:true}}, extra);
+}
+const cfg = {responsive:true, displayModeBar:false};
+let segDim = 'imd_band';
+const segNames = {imd_band:'IMD band', highest_education:'Education', age_band:'Age', prev_attempts:'Prev. attempts', region:'Region'};
+function draw() {
+  const c = C();
+  Plotly.react('c_funnel', [{type:'funnel', y:D.funnel.map(r=>small()? r.stage.replace('First assessment submitted','1st assessment').replace('Passed (Pass/Distinction)','Passed').replace('First VLE activity','Used VLE') : r.stage),
+    x:D.funnel.map(r=>r.students), textinfo:'value+percent initial', marker:{color:c.slice(0,4)}, connector:{line:{color:css('--border')}}}],
+    layout({margin:{l:small()?85:160,r:10,t:10,b:20}, yaxis:{automargin:true}}), cfg);
+  Plotly.react('c_wtiming', [{type:'bar', x:w.map(r=>r.window.slice(3)), y:w.map(r=>r.pct), name:'% of withdrawals', marker:{color:c[4]}, text:w.map(r=>r.pct+'%'), textposition:'outside', cliponaxis:false},
+    {type:'scatter', mode:'lines+markers', x:w.map(r=>r.window.slice(3)), y:w.map(r=>r.cumulative_pct), name:'cumulative %', line:{color:c[0], width:3}}],
+    layout({yaxis:{ticksuffix:'%', gridcolor:css('--grid'), range:[0,105]}}), cfg);
+  const pres = [...new Set(D.curves.map(r=>r.code_presentation))];
+  Plotly.react('c_curves', pres.map((p,i)=>{const g=D.curves.filter(r=>r.code_presentation===p);
+    return {type:'scatter', mode:'lines+markers', name:p+(p.endsWith('B')?' (Feb)':' (Oct)'), x:g.map(r=>r.day_since_start), y:g.map(r=>r.retained_pct),
+      line:{color:c[i], width:3, dash:p.endsWith('B')?'dot':'solid'}, marker:{size:small()?4:6}}}),
+    layout({xaxis:{title:{text:'days since module start'}, gridcolor:css('--grid')}, yaxis:{ticksuffix:'%', gridcolor:css('--grid')},
+      shapes:[{type:'line', x0:0, x1:0, yref:'paper', y0:0, y1:1, line:{dash:'dot', color:css('--muted')}}]}), cfg);
+  Plotly.react('c_magic', [{type:'bar', x:mg.map(r=>r.active_days_first_14), y:mg.map(r=>r.pass_pct), name:'Pass %', marker:{color:c[2]}},
+    {type:'scatter', mode:'lines+markers', x:mg.map(r=>r.active_days_first_14), y:mg.map(r=>r.withdrawal_pct), name:'Withdrawal %', line:{color:c[4], width:3}}],
+    layout({xaxis:{title:{text:'active days in first 14', standoff:4}, type:'category', gridcolor:css('--grid')}, yaxis:{ticksuffix:'%', gridcolor:css('--grid')}}), cfg);
+  Plotly.react('c_score', [{type:'bar', x:D.score.map(r=>r.first_score.slice(3)), y:D.score.map(r=>r.pass_pct), name:'Pass %', marker:{color:c[0]}, text:D.score.map(r=>r.pass_pct+'%'), textposition:'outside', cliponaxis:false},
+    {type:'bar', x:D.score.map(r=>r.first_score.slice(3)), y:D.score.map(r=>r.withdrawal_pct), name:'Withdrawal %', marker:{color:c[4]}}],
+    layout({barmode:'group', xaxis:{title:{text:'first assessment score', standoff:4}, gridcolor:css('--grid')}, yaxis:{ticksuffix:'%', gridcolor:css('--grid'), range:[0,85]}}), cfg);
+  const sg = D.segments[segDim];
+  const horiz = small() || segDim==='region' || segDim==='highest_education';
+  const lab = sg.map(r=>r.segment.replace(' Qualification','').replace(' or Equivalent','').replace(' Region',''));
+  const tr = (key,name,col) => horiz ? {type:'bar', orientation:'h', y:lab, x:sg.map(r=>r[key]), name, marker:{color:col}} : {type:'bar', x:lab, y:sg.map(r=>r[key]), name, marker:{color:col}};
+  const h = horiz ? Math.max(300, sg.length*(small()?34:28)+80) : (small()?300:340);
+  document.getElementById('c_seg').style.height = h+'px';
+  Plotly.react('c_seg', [tr('pass_pct','Pass %',c[2]), tr('withdrawal_pct','Withdrawal %',c[4])],
+    layout({barmode:'group', margin:{l:horiz?(small()?95:150):50, r:10, t:10, b:50},
+      xaxis:{gridcolor:css('--grid'), ticksuffix: horiz?'%':'', automargin:true}, yaxis:{gridcolor:css('--grid'), ticksuffix: horiz?'':'%', automargin:true, autorange: horiz?'reversed':true}}), cfg);
+  Plotly.react('c_hyp', [{type:'bar', x:D.hyp.map(r=>r.imd_band), y:D.hyp.map(r=>r.hyp_ltv_to_cac), marker:{color:c[5]}, text:D.hyp.map(r=>r.hyp_ltv_to_cac.toFixed(2)+'x'), textposition:'outside', cliponaxis:false,
+    customdata:D.hyp.map(r=>[r.real_pass_pct, r.hyp_ltv_inr]), hovertemplate:'IMD %{x}<br>LTV:CAC %{y:.2f}x<br>real pass %{customdata[0]}%<br>hyp. LTV ₹%{customdata[1]}<extra></extra>'}],
+    layout({showlegend:false, xaxis:{title:{text:'IMD band (hypothetical LTV:CAC)', standoff:4}, tickangle:small()?-45:0, gridcolor:css('--grid')}, yaxis:{range:[0,3.6], ticksuffix:'x', gridcolor:css('--grid')}}), cfg);
+}
+document.getElementById('segTabs').innerHTML = Object.entries(segNames).map(([k,v])=>`<button data-k="${k}" class="${k===segDim?'on':''}">${v}</button>`).join('');
+document.getElementById('segTabs').addEventListener('click', e => { const k=e.target.dataset.k; if(!k) return; segDim=k;
+  document.querySelectorAll('#segTabs button').forEach(b=>b.classList.toggle('on', b.dataset.k===k)); draw(); });
+document.getElementById('themeBtn').addEventListener('click', () => { const r=document.documentElement;
+  const dark = r.dataset.theme ? r.dataset.theme==='dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  r.dataset.theme = dark ? 'light' : 'dark'; draw(); });
+let lastSmall = small(); window.addEventListener('resize', () => { if (small()!==lastSmall) { lastSmall=small(); draw(); } });
+draw();
+// keep charts fitted to their cards (orientation change, late font/layout shifts)
+const ro = new ResizeObserver(es => es.forEach(e => { if (e.target.data) Plotly.Plots.resize(e.target); }));
+document.querySelectorAll('.chart').forEach(el => ro.observe(el));
+</script>
+</body>
+</html>

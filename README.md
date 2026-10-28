@@ -9,6 +9,8 @@
 
 A growth / product-analytics case study on the **real Open University Learning Analytics Dataset** (32,593 enrolments, 10.6M VLE interaction rows). It maps a SaaS-style funnel onto learning (**Registered → First VLE activity → First assessment → Passed**, with withdrawal as churn), measures cohort retention by presentation, tests for an early-engagement "magic moment" and turns the results into growth experiments for a K-10 EdTech like **Edumaths360**.
 
+**🔗 [Live dashboard](https://creator-hub24.github.io/edtech-growth-analytics/)** — interactive, mobile-friendly version of these results (GitHub Pages, rebuilt from the repo's SQL with `python dashboard/build_dashboard.py` → `docs/index.html`).
+
 ![Dashboard](assets/00_dashboard.png)
 
 ## 💡 Headline findings (real data)
